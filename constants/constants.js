@@ -13,8 +13,8 @@ const HASHSALT = 10;
 
 const CORS_CONFIG = {
   origin: [
-    'https://satip1.nomoredomains.xyz',
-    'http://satip1.nomoredomains.xyz',
+    'https://satip2.nomoredomains.xyz',
+    'http://satip2.nomoredomains.xyz',
     'http://localhost:3000',
     'http://localhost:3001',
   ],
