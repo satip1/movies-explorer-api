@@ -13,10 +13,9 @@ const ErrorNotFound = require('../errors/ErrorNotFound'); // 404
 const ErrorBadEmail = require('../errors/ErrorBadEmail'); // 409
 const ErrorOtherError = require('../errors/ErrorBadData'); // 500
 
-const { OK } = require('../constants/constants');
-
 // кодовые слова и длина соли хэша
-const { SECRET_CODE, HASHSALT } = require('../constants/constants');
+const { HASHSALT } = require('../constants/constants');
+const { SECRET_CODE } = require('../config');
 
 // запрос данных текущего пользователя
 module.exports.getUserData = (req, res, next) => {
@@ -27,13 +26,13 @@ module.exports.getUserData = (req, res, next) => {
         next(new ErrorNotFound('Пользователь с данным id не существует'));
         return;
       }
-      res.status(OK).send({ user });
+      res.send({ user });
     })
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        next(new ErrorBadData('Некорректные данные пользователя.'));
-        return;
-      }
+    .catch(() => {
+      // if (err.name === 'CastError') {
+      //   next(new ErrorBadData('Некорректные данные пользователя.'));
+      //   return;
+      // }
       next(new ErrorOtherError('На сервере произошла ошибка'));
     });
 };
@@ -50,9 +49,13 @@ module.exports.patchUserData = (req, res, next) => {
         next(new ErrorNotFound('Пользователь с данным id не существует'));
         return;
       }
-      res.status(OK).send({ user });
+      res.send({ user });
     })
     .catch((err) => {
+      if (err.name === 'MongoError' && err.code === 11000) {
+        next(new ErrorBadEmail(`Пользователь с ${email} уже есть`));
+        return;
+      }
       if (err.name === 'ValidationError') {
         next(new ErrorBadData('Некорректные данные пользователя.'));
         return;
@@ -71,7 +74,7 @@ module.exports.createUser = (req, res, next) => {
     .then((hash) => User.create({
       name, email, password: hash,
     }))
-    .then((user) => res.status(OK).send({ user }))
+    .then((user) => res.send({ _id: user._id, email: user.email, name: user.name }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         next(new ErrorBadData('Некорректные данные пользователя'));
@@ -91,7 +94,7 @@ module.exports.login = (req, res, next) => {
   User.findUserByCredentials(email, password)
     .then((user) => {
       const token = jwt.sign({ _id: user._id }, SECRET_CODE, { expiresIn: '7d' });
-      res.status(OK).send({ token });
+      res.send({ token });
     })
     .catch((err) => {
       if (err.statusCode === 401) {

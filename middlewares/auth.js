@@ -3,7 +3,7 @@
 const jwt = require('jsonwebtoken');
 
 const ErrorLogin = require('../errors/ErrorLogin');
-const { SECRET_CODE } = require('../constants/constants');
+const { SECRET_CODE } = require('../config');
 
 module.exports.auth = (req, res, next) => {
   const { authorization } = req.headers;

@@ -1,20 +1,19 @@
 // подключились к схеме фильма
-const Movie = require('../models/movie');
-// подключились к схеме пользователя
 
+// подключились к схеме пользователя
+const Movie = require('../models/movie');
+
+// константы кодов ошибок
 const ErrorOtherError = require('../errors/ErrorOtherError'); // 500
 const ErrorBadData = require('../errors/ErrorBadData'); // 400
 const ErrorDeleteCard = require('../errors/ErrorDeleteCard'); // 403
 const ErrorNotFound = require('../errors/ErrorNotFound'); // 404
 
-// константы кодов ошибок
-const { OK } = require('../constants/constants');
-
 // запрос всех фильмов, созданных пользователем
 module.exports.getAllMovies = (req, res, next) => {
   const userId = req.user._id;
   Movie.find({ owner: userId })
-    .then((movies) => res.status(OK).send(movies))
+    .then((movies) => res.send(movies))
     .catch(() => next(new ErrorOtherError()));
 };
 
@@ -42,7 +41,7 @@ module.exports.creatMovie = (req, res, next) => {
     nameRU,
     nameEN,
   })
-    .then((movie) => res.status(OK).send({ movie }))
+    .then((movie) => res.send({ movie }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         next(new ErrorBadData(`Некорректные данные карточки. Ошибка: ${err.message}`));
@@ -58,16 +57,12 @@ module.exports.deleteMovie = (req, res, next) => {
   // проверка   на возможность удаления
   // если id автора и пользователя совпадают, удалим
   Movie.findById(req.params._id)
+    .orFail(new ErrorNotFound('Ошибка: карточкис таким id не найдено'))
     .then((movie) => {
-      if (!movie) {
-        next(new ErrorNotFound('Ошибка: карточкис таким id не найдено'));
-        return;
+      if (movie.owner._id.toString() === ownerUser.toString()) {
+        return Movie.deleteOne(movie).then(() => res.send({ message: 'Карточка фильма удалена:' }));
       }
-      if (movie.owner._id.toString() !== ownerUser.toString()) {
-        next(new ErrorDeleteCard('Ошибка: вы не можете удалить эту карточку'));
-        return;
-      }
-      Movie.deleteOne(movie).then(() => res.status(OK).send({ message: 'Карточка фильма удалена:' }));
+      throw new ErrorDeleteCard('Ошибка: вы не можете удалить эту карточку');
     })
     .catch((err) => {
       if (err.name === 'CastError') {

@@ -1,6 +1,6 @@
 // роутеры для пользователей
 const router = require('express').Router();
-const { celebrate, Joi } = require('celebrate');
+const { validateUserme } = require('../middlewares/routevalidation');
 
 const {
   getUserData, patchUserData,
@@ -8,11 +8,6 @@ const {
 
 router.get('/users/me', getUserData);
 
-router.patch('/users/me', celebrate({
-  body: Joi.object().keys({
-    name: Joi.string().required().min(2).max(30),
-    email: Joi.string().required().email(),
-  }),
-}), patchUserData);
+router.patch('/users/me', validateUserme, patchUserData);
 
 module.exports = router;

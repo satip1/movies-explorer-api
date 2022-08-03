@@ -88,6 +88,6 @@ const movieSchema = new mongoose.Schema({
     required: true,
     default: 'Английское название фильма',
   },
-})
+});
 
 module.exports = mongoose.model('movie', movieSchema);
