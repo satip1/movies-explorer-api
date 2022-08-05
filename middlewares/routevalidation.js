@@ -6,7 +6,7 @@ const { REG_LINK } = require('../constants/constants');
 // валидация регистрации
 const validateSignup = celebrate({
   body: Joi.object().keys({
-    name: Joi.string().min(2).max(30),
+    name: Joi.string().required().min(2).max(30),
     email: Joi.string().required().email(),
     password: Joi.string().required().min(8),
   }),
